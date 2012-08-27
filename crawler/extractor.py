@@ -1,3 +1,12 @@
+'''
+Created on 2012-8-26
+
+@author: yaoyao
+
+A general page source extractor.
+Extract page source and the links in page source.
+'''
+
 import re
 import urllib2
 import urlparse
