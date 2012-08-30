@@ -58,23 +58,81 @@ class ProductExtract():
 # Extract user comment for a product.
 class CommentExtract():
   def __init__(self):
+    self.comments = {}
+    self.next_page = ''
     return
+  
+  def extract(self, p):
+    soup = BeautifulSoup(msg)
+    self.dfs(soup)
+  
+  def setnextpage(self, p):
+    if 'name' in dir(p) and p.name == 'a':
+      if 'next' in p.string.lower():
+        self.next_page = p['href']
+        
+  def dfs(self, p):
+    if 'attrs' in dir(p):
+      for attr in p.attrs:
+        if attr[0] =='class' and attr[1] == 'paging':
+          setnextpage(p)
+    if not 'contents' in dir(p):
+      return
+    comment_id = None
+    for c in p.contents:
+      if 'attrs' in dir(c) and 'name' in dir(c) and c.name =='a':
+        if 'name' in c.attrs:
+          comment_id = c['name']
+      if 'name' in dir(c) and c.name == 'div' and comment_id:
+        self.comments[comment_id] = c
+      else:
+        self.dfs(c)
   
 # Extract productions from a search page
 # or classification product page.
 class SearchExtract():
   def __init__(self):
+    self.search_pattern = ['computer parts & components']
+    self.view_more = ['see more']
+    self.department_url = ''
     return
+  
+  def dfs(self, p):
+    if 'name' in dir(p) and p.name == 'a' and p.string and \
+    HTMLParser.HTMLParser().unescape(p.string).lower() in self.search_pattern:
+      self.department_url = 'http://www.amazon.com' + p['href']
+    if 'contents' in dir(p):
+      for c in p.contents:
+        self.dfs(c)
+
+  def extract(self, msg):
+    soup = BeautifulSoup(msg)
+    self.dfs(soup)
   
 if __name__ == "__main__":
   # Test product extract.
-  if len(argv) >= 2:
-    url = argv[1]
-  else:
-    url = "http://www.amazon.com/Samsung-UN46EH6000-46-Inch-1080p-HDTV/dp/B0071O4EKU/ref=pd_ts_zgc_e_3578042011_2?ie=UTF8&s=electronics&pf_rd_p=1367759742&pf_rd_s=right-6&pf_rd_t=101&pf_rd_i=507846&pf_rd_m=ATVPDKIKX0DER&pf_rd_r=1E8N6GPA3MX4607DC1T6"
+  url = "http://www.amazon.com/Samsung-UN46EH6000-46-Inch-1080p-HDTV/dp/B0071O4EKU/ref=pd_ts_zgc_e_3578042011_2?ie=UTF8&s=electronics&pf_rd_p=1367759742&pf_rd_s=right-6&pf_rd_t=101&pf_rd_i=507846&pf_rd_m=ATVPDKIKX0DER&pf_rd_r=1E8N6GPA3MX4607DC1T6"
   response = urllib2.urlopen(url, timeout = 5000)
   msg = response.read()
   pe = ProductExtract()
   pe.extract(msg)
   print pe.title
   print pe.dict
+  
+  # Test comment page.
+  url = "http://www.amazon.com/Samsung-UN40ES6100-40-Inch-1080p-120Hz/product-reviews/B0076M04QU/ref=cm_cr_dp_see_all_btm?ie=UTF8&showViewpoints=1&sortBy=bySubmissionDateDescending"
+  response = urllib2.urlopen(url, timeout = 5000)
+  msg = response.read()
+  ce = CommentExtract()
+  ce.extract(msg)
+  print ce.next_page
+  for comment_id in ce.comments:
+    print comment_id, ce.comments[comment_id]
+    
+  # Test classification page.
+  url = "http://www.amazon.com/gp/site-directory/ref=sa_menu_fullstore"
+  response = urllib2.urlopen(url, timeout = 5000)
+  msg = response.read()
+  se = SearchExtract()
+  se.extract(msg)
+  print se.department_url
