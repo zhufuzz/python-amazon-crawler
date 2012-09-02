@@ -9,7 +9,11 @@ Aimed at extractor product information and comment.
 
 import HTMLParser
 import urllib2
-from bs4 import BeautifulSoup
+from sys import platform
+if platform == 'darwin':
+  from BeautifulSoup import BeautifulSoup
+else:
+  from bs4 import BeautifulSoup
 from sys import argv
 
 # Extract product informations such as:
@@ -75,7 +79,7 @@ class CommentExtract():
     if 'attrs' in dir(p):
       for attr in p.attrs:
         if attr[0] =='class' and attr[1] == 'paging':
-          setnextpage(p)
+          self.setnextpage(p)
     if not 'contents' in dir(p):
       return
     comment_id = None
